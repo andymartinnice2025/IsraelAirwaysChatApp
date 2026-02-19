@@ -114,17 +114,6 @@
       color:#fff;
       font-size:14px;
     }
-    .btn:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-    }
-
-    .statusLine{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.35;
-    }
 
     /* Overlay */
     .overlay{
@@ -175,10 +164,18 @@
       flex:1;
       position:relative;
       min-height:0;
+      background:#fff;
     }
-    #webchatContainer{
+
+    /* IFRAME CONTAINS WEBCHAT */
+    #chatFrame{
       position:absolute;
       inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
+      background:#fff;
     }
   </style>
 </head>
@@ -213,10 +210,10 @@
           <div style="font-weight:1000; font-size:18px; margin-bottom:8px;">שלום יוגב 👋</div>
           זיהינו שינוי בלו״ז לטיסה IA 712.<br>
           אפשר לדבר עם נציג/ה בצ׳אט.
-
-          <button class="btn" id="openChat" disabled>💬 פתח צ׳אט</button>
-
-          <div class="statusLine" id="libStatus">טוען רכיב צ׳אט…</div>
+          <button class="btn" id="openChat">💬 פתח צ׳אט</button>
+          <div style="margin-top:10px;font-size:12px;color:var(--muted);">
+            הצ׳אט נטען בתוך החלון באפליקציה (iframe).
+          </div>
         </div>
       </div>
 
@@ -227,7 +224,8 @@
             <button class="closeBtn" id="closeChat">✕</button>
           </div>
           <div class="chatMount">
-            <div id="webchatContainer"></div>
+            <!-- IMPORTANT: this loads chat.html from the same repo -->
+            <iframe id="chatFrame" title="Israel Airways Support Chat" src="chat.html"></iframe>
           </div>
         </div>
       </div>
@@ -236,80 +234,23 @@
   </div>
 
   <script>
-    // Put endpoint on window to avoid redeclare errors
-    window.IA_WEBCHAT_ENDPOINT =
-      "https://endpoint-trial.cognigy.ai/fa17d61a203862b03445bd139a8c2b3589dbd5e0325f8d84d917ddebbfef0bdc";
-
-    const libStatus = document.getElementById("libStatus");
-    const openBtn = document.getElementById("openChat");
-
-    function setStatus(t){ libStatus.textContent = t; }
-
-    // Load the official Cognigy webchat bundle (per docs)
-    // https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js :contentReference[oaicite:1]{index=1}
-    function loadWebchatBundle(){
-      return new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = "https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js";
-        s.async = true;
-        s.onload = () => resolve(true);
-        s.onerror = () => reject(new Error("Failed to load webchat.js"));
-        document.head.appendChild(s);
-      });
-    }
-
-    let chatInitialized = false;
+    const byId = (id) => document.getElementById(id);
+    const show = (el) => el.classList.add("show");
+    const hide = (el) => el.classList.remove("show");
 
     function openChat(){
-      document.getElementById("chatOverlay").classList.add("show");
-
-      if (chatInitialized) return;
-
-      if (typeof window.initWebchat !== "function"){
-        alert("רכיב הצ׳אט לא נטען. בדוק DevTools → Network האם webchat.js נחסם/404.");
-        return;
-      }
-
-      window.initWebchat(window.IA_WEBCHAT_ENDPOINT, {
-        open: true,
-        container: "#webchatContainer",
-        disableDefaultLauncher: true
-      });
-
-      chatInitialized = true;
+      show(byId("chatOverlay"));
+      // If you want the chat to reset each time, uncomment:
+      // byId("chatFrame").src = "chat.html?ts=" + Date.now();
     }
 
-    document.getElementById("openChat").addEventListener("click", openChat);
-
-    document.getElementById("closeChat").addEventListener("click", () => {
-      document.getElementById("chatOverlay").classList.remove("show");
+    document.addEventListener("DOMContentLoaded", () => {
+      byId("openChat").addEventListener("click", openChat);
+      byId("closeChat").addEventListener("click", () => hide(byId("chatOverlay")));
+      byId("chatOverlay").addEventListener("click", (e) => {
+        if (e.target === byId("chatOverlay")) hide(byId("chatOverlay"));
+      });
     });
-
-    document.getElementById("chatOverlay").addEventListener("click", (e) => {
-      if (e.target.id === "chatOverlay") {
-        document.getElementById("chatOverlay").classList.remove("show");
-      }
-    });
-
-    // Boot
-    (async () => {
-      try{
-        setStatus("טוען רכיב צ׳אט…");
-        await loadWebchatBundle();
-
-        if (typeof window.initWebchat === "function"){
-          setStatus("רכיב הצ׳אט נטען ✅");
-          openBtn.disabled = false;
-        } else {
-          setStatus("הרכיב נטען אבל initWebchat לא זמין. בדוק Console.");
-          openBtn.disabled = true;
-        }
-      } catch (e){
-        console.warn(e);
-        setStatus("לא ניתן לטעון את רכיב הצ׳אט. בדוק DevTools → Network לחסימות/404.");
-        openBtn.disabled = true;
-      }
-    })();
   </script>
 </body>
 </html>
