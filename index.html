@@ -5,34 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Israel Airways – Support Chat</title>
 
-  <!-- Cognigy Webchat CDN (CORRECT CDN) -->
+  <!-- Proper Cognigy CDN -->
   <script src="https://unpkg.com/@cognigy/webchat@latest/dist/webchat.js"></script>
 
   <style>
-    :root{
-      --ia-sky:#0B76FF;
-      --ia-sky-2:#44B6FF;
-      --ia-bg:#EEF5FF;
-      --ia-border:#DFE9F6;
-      --ia-green:#0E8A5B;
-      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
-    }
-
-    *{ box-sizing:border-box; }
-
     body{
       margin:0;
-      font-family:var(--font);
+      font-family:system-ui;
       background:#e9edf4;
-      min-height:100vh;
       display:grid;
       place-items:center;
-      padding:22px;
+      height:100vh;
     }
 
     .phone{
-      width:min(430px, 94vw);
-      height:min(900px, 94vh);
+      width:390px;
+      height:820px;
       background:#0f1115;
       border-radius:40px;
       padding:14px;
@@ -41,117 +29,69 @@
     }
 
     .screen{
-      height:100%;
+      background:#EEF5FF;
       border-radius:30px;
+      height:100%;
       overflow:hidden;
-      background:var(--ia-bg);
-      position:relative;
       display:flex;
       flex-direction:column;
     }
 
     .header{
-      padding:18px;
-      color:#fff;
-      background: linear-gradient(180deg, var(--ia-sky), var(--ia-sky-2));
-    }
-
-    .logoRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-weight:900;
-      font-size:14px;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    .brandMark{
-      width:36px;
-      height:36px;
-      border-radius:12px;
-      background:rgba(255,255,255,.2);
-      display:grid;
-      place-items:center;
-      font-weight:900;
+      padding:20px;
+      background:linear-gradient(180deg,#0B76FF,#44B6FF);
       color:white;
+      font-weight:900;
     }
 
     .content{
-      padding:18px;
+      padding:20px;
       flex:1;
-      overflow:auto;
     }
 
-    .msgCard{
-      background:#fff;
-      border-radius:20px;
-      padding:16px;
-      box-shadow:0 10px 25px rgba(0,0,0,.08);
-    }
-
-    .btn{
-      margin-top:16px;
+    button{
+      padding:14px;
       border:none;
       border-radius:16px;
-      padding:12px 14px;
       font-weight:900;
       cursor:pointer;
-      font-size:14px;
-    }
-
-    .btn.chat{
-      background:linear-gradient(180deg, var(--ia-green), #0A6B46);
+      background:#0E8A5B;
       color:white;
       width:100%;
+      margin-top:20px;
     }
 
-    /* Chat Overlay */
     .overlay{
       position:absolute;
       inset:0;
       background:rgba(0,0,0,.45);
       display:none;
-      z-index:50;
-      padding:14px;
+      padding:16px;
     }
 
     .overlay.show{
       display:block;
     }
 
-    .sheet{
+    .chatSheet{
+      background:white;
+      border-radius:24px;
       position:absolute;
-      left:14px;
-      right:14px;
       top:70px;
       bottom:80px;
-      background:white;
-      border-radius:26px;
+      left:16px;
+      right:16px;
       display:flex;
       flex-direction:column;
       overflow:hidden;
-      box-shadow:0 30px 80px rgba(0,0,0,.35);
     }
 
-    .topBar{
+    .chatHeader{
       padding:14px;
-      border-bottom:1px solid var(--ia-border);
+      border-bottom:1px solid #DFE9F6;
       display:flex;
       justify-content:space-between;
-      align-items:center;
       font-weight:900;
-    }
-
-    .closeBtn{
-      border:none;
-      background:none;
-      font-size:18px;
-      cursor:pointer;
     }
 
     .chatMount{
@@ -167,75 +107,61 @@
 </head>
 
 <body>
-  <div class="phone">
-    <div class="screen">
 
-      <div class="header">
-        <div class="logoRow">
-          <div>11:07</div>
-          <div class="brand">
-            <div class="brandMark">IA</div>
-            <div>
-              Israel Airways<br>
-              <span style="font-weight:700; font-size:11px;">My Flight</span>
-            </div>
-          </div>
-          <div>🟢 שירות זמין</div>
-        </div>
-      </div>
+<div class="phone">
+  <div class="screen">
 
-      <div class="content">
-        <div class="msgCard">
-          שלום יוגב 👋<br><br>
-          זיהינו שינוי קטן בלו״ז לטיסה IA 712.<br>
-          ניתן לדבר עם נציג/ה בצ׳אט.
-          <button class="btn chat" id="btnChatNow">💬 פתח צ׳אט</button>
-        </div>
-      </div>
-
-      <!-- CHAT OVERLAY -->
-      <div class="overlay" id="chatOverlay">
-        <div class="sheet">
-          <div class="topBar">
-            <div>צ׳אט עם נציג/ה • Israel Airways</div>
-            <button class="closeBtn" id="btnCloseChat">✕</button>
-          </div>
-
-          <div class="chatMount">
-            <div id="webchatContainer"></div>
-          </div>
-        </div>
-      </div>
-
+    <div class="header">
+      Israel Airways • My Flight
     </div>
+
+    <div class="content">
+      שלום יוגב 👋<br><br>
+      זיהינו שינוי בלו״ז לטיסה IA 712.
+      <button id="openChat">💬 פתח צ׳אט</button>
+    </div>
+
+    <div class="overlay" id="chatOverlay">
+      <div class="chatSheet">
+        <div class="chatHeader">
+          צ׳אט עם נציג/ה
+          <span id="closeChat" style="cursor:pointer;">✕</span>
+        </div>
+        <div class="chatMount">
+          <div id="webchatContainer"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
+</div>
 
-  <script>
-    const ENDPOINT =
-      "https://endpoint-trial.cognigy.ai/fa17d61a203862b03445bd139a8c2b3589dbd5e0325f8d84d917ddebbfef0bdc";
+<script>
+const ENDPOINT =
+  "https://endpoint-trial.cognigy.ai/fa17d61a203862b03445bd139a8c2b3589dbd5e0325f8d84d917ddebbfef0bdc";
 
-    let chatInitialized = false;
+let chatInitialized = false;
 
-    function openChat(){
-      document.getElementById("chatOverlay").classList.add("show");
+function openChat() {
+  document.getElementById("chatOverlay").classList.add("show");
 
-      if (chatInitialized) return;
+  if (chatInitialized) return;
 
-      initWebchat(ENDPOINT, {
-        open: true,
-        container: "#webchatContainer",
-        rootElement: document.getElementById("webchatContainer"),
-        disableDefaultLauncher: true
-      });
+  initWebchat(ENDPOINT, {
+    open: true,
+    container: "#webchatContainer",
+    rootElement: document.getElementById("webchatContainer"),
+    disableDefaultLauncher: true
+  });
 
-      chatInitialized = true;
-    }
+  chatInitialized = true;
+}
 
-    document.getElementById("btnChatNow").addEventListener("click", openChat);
+document.getElementById("openChat").addEventListener("click", openChat);
+document.getElementById("closeChat").addEventListener("click", () =>
+  document.getElementById("chatOverlay").classList.remove("show")
+);
+</script>
 
-    document.getElementById("btnCloseChat").addEventListener("click", () => {
-      document.getElementById("chatOverlay").classList.remove("show");
-    });
-  </script>
 </body>
 </html>
