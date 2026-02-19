@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Israel Airways – Support Chat</title>
 
-  <!-- ✅ CORRECT UMD BUILD (defines window.initWebchat) -->
-  <script src="https://cdn.jsdelivr.net/npm/@cognigy/webchat/dist/webchat.umd.js"></script>
+  <!-- Official Cognigy Webchat (Stable Build) -->
+  <script src="https://webchat.cognigy.ai/webchat.js"></script>
 
   <style>
     body{
@@ -63,7 +63,6 @@
       font-size:15px;
     }
 
-    /* Overlay */
     .overlay{
       position:absolute;
       inset:0;
@@ -126,7 +125,6 @@
       <button id="openChat">💬 פתח צ׳אט</button>
     </div>
 
-    <!-- CHAT OVERLAY -->
     <div class="overlay" id="chatOverlay">
       <div class="chatSheet">
         <div class="chatHeader">
@@ -143,7 +141,7 @@
 </div>
 
 <script>
-const ENDPOINT =
+window.ENDPOINT =
   "https://endpoint-trial.cognigy.ai/fa17d61a203862b03445bd139a8c2b3589dbd5e0325f8d84d917ddebbfef0bdc";
 
 let chatInitialized = false;
@@ -154,147 +152,14 @@ function openChat() {
   if (chatInitialized) return;
 
   if (typeof initWebchat !== "function") {
-    console.error("Webchat failed to load.");
-    alert("Webchat failed to load. Check console.");
+    console.error("initWebchat is not defined.");
+    alert("Webchat script failed to load.");
     return;
   }
 
-  initWebchat(ENDPOINT, {
+  initWebchat(window.ENDPOINT, {
     open: true,
     container: "#webchatContainer",
-    rootElement: document.getElementById("webchatContainer"),
-    disableDefaultLauncher: true
-  });
-
-  chatInitialized = true;
-}
-
-document.getElementById("openChat").addEventListener("click", openChat);
-
-document.getElementById("closeChat").addEventListener("click", () => {
-  document.getElementById("chatOverlay").classList.remove("show");
-});
-</script>
-
-</body>
-</html>
-      flex-direction:column;
-    }
-
-    .header{
-      padding:20px;
-      background:linear-gradient(180deg,#0B76FF,#44B6FF);
-      color:white;
-      font-weight:900;
-    }
-
-    .content{
-      padding:20px;
-      flex:1;
-    }
-
-    button{
-      padding:14px;
-      border:none;
-      border-radius:16px;
-      font-weight:900;
-      cursor:pointer;
-      background:#0E8A5B;
-      color:white;
-      width:100%;
-      margin-top:20px;
-    }
-
-    .overlay{
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      padding:16px;
-    }
-
-    .overlay.show{
-      display:block;
-    }
-
-    .chatSheet{
-      background:white;
-      border-radius:24px;
-      position:absolute;
-      top:70px;
-      bottom:80px;
-      left:16px;
-      right:16px;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-    }
-
-    .chatHeader{
-      padding:14px;
-      border-bottom:1px solid #DFE9F6;
-      display:flex;
-      justify-content:space-between;
-      font-weight:900;
-    }
-
-    .chatMount{
-      flex:1;
-      position:relative;
-    }
-
-    #webchatContainer{
-      position:absolute;
-      inset:0;
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="phone">
-  <div class="screen">
-
-    <div class="header">
-      Israel Airways • My Flight
-    </div>
-
-    <div class="content">
-      שלום יוגב 👋<br><br>
-      זיהינו שינוי בלו״ז לטיסה IA 712.
-      <button id="openChat">💬 פתח צ׳אט</button>
-    </div>
-
-    <div class="overlay" id="chatOverlay">
-      <div class="chatSheet">
-        <div class="chatHeader">
-          צ׳אט עם נציג/ה
-          <span id="closeChat" style="cursor:pointer;">✕</span>
-        </div>
-        <div class="chatMount">
-          <div id="webchatContainer"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-const ENDPOINT =
-  "https://endpoint-trial.cognigy.ai/fa17d61a203862b03445bd139a8c2b3589dbd5e0325f8d84d917ddebbfef0bdc";
-
-let chatInitialized = false;
-
-function openChat() {
-  document.getElementById("chatOverlay").classList.add("show");
-
-  if (chatInitialized) return;
-
-  initWebchat(ENDPOINT, {
-    open: true,
-    container: "#webchatContainer",
-    rootElement: document.getElementById("webchatContainer"),
     disableDefaultLauncher: true
   });
 
