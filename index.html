@@ -7,7 +7,6 @@
 
   <style>
     :root{
-      /* Israel Airways palette (sky / navy / white) */
       --ia-sky:#0B76FF;
       --ia-sky-2:#44B6FF;
       --ia-navy:#08131F;
@@ -56,7 +55,7 @@
       flex-direction:column;
     }
 
-    /* Header (Israel Airways) */
+    /* Header */
     .header{
       padding:18px 18px 16px;
       color:#fff;
@@ -77,7 +76,6 @@
       transform: rotate(-2deg);
     }
 
-    /* Top row: time | centered logo | status pill */
     .topRow{
       display:grid;
       grid-template-columns: 1fr auto 1fr;
@@ -98,8 +96,10 @@
       align-items:center;
       justify-content:center;
       gap:10px;
+      min-width:210px;
     }
 
+    /* Brand mark – fixed to ALWAYS render (SVG + fallback letters) */
     .brandMark{
       width:44px;height:44px;
       border-radius:14px;
@@ -110,8 +110,23 @@
       backdrop-filter: blur(8px);
       box-shadow:0 10px 25px rgba(0,0,0,.12);
       overflow:hidden;
+      position:relative;
+      flex:0 0 auto;
     }
-    .brandMark svg{ width:34px;height:34px; display:block; }
+    .brandMark svg{
+      width:34px;height:34px;
+      display:block;
+    }
+    .brandFallback{
+      position:absolute;
+      inset:0;
+      display:none; /* shown only if svg fails via JS */
+      place-items:center;
+      font-weight:1000;
+      letter-spacing:.4px;
+      color:#fff;
+      font-size:14px;
+    }
 
     .brandText{
       display:flex;
@@ -142,6 +157,7 @@
       font-weight:900;
       font-size:12px;
       backdrop-filter: blur(8px);
+      white-space:nowrap;
     }
     .dot{
       width:10px;height:10px;border-radius:999px;
@@ -161,7 +177,7 @@
       font-weight:800;
     }
 
-    /* Flight strip (mini itinerary) */
+    /* Flight strip */
     .flightStrip{
       margin-top:14px;
       display:grid;
@@ -206,7 +222,6 @@
     }
     .mid .plane{
       position:absolute;
-      inset:auto;
       right:44px;
       top:-11px;
       font-size:16px;
@@ -248,7 +263,7 @@
       border:1px solid rgba(11,118,255,.14);
     }
 
-    /* Quick actions row */
+    /* Quick actions */
     .quickActions{
       display:grid;
       grid-template-columns: repeat(4, 1fr);
@@ -487,7 +502,7 @@
 
     .sheetBody{ padding:14px; }
 
-    /* Chat overlay body */
+    /* Chat overlay */
     .chatSheet{
       top:68px;
       bottom:82px;
@@ -504,6 +519,29 @@
       min-height:0;
     }
 
+    .chatHint{
+      padding:12px;
+      font-size:12px;
+      color: rgba(8,19,31,.60);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border:1px solid rgba(223,233,246,.95);
+      border-radius:18px;
+      background:#fff;
+    }
+    .pill{
+      border:1px solid rgba(223,233,246,.95);
+      background:#fff;
+      border-radius:999px;
+      padding:8px 12px;
+      color: rgba(8,19,31,.70);
+      font-weight:1000;
+      font-size:12px;
+      white-space:nowrap;
+    }
+
     .chatMount{
       flex:1;
       min-height:0;
@@ -514,28 +552,26 @@
       position:relative;
     }
 
-    .chatHint{
-      padding:12px;
-      font-size:12px;
-      color: rgba(8,19,31,.60);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-    }
-
-    /* We'll mount the webchat into this container */
+    /* Webchat mounts here */
     #webchatContainer{
       position:absolute;
       inset:0;
     }
 
-    /* Optional: if Cognigy webchat injects a launcher/button, hide it (we open via our own CTA) */
-    .hide-cognigy-launcher .webchat-toggle-button,
-    .hide-cognigy-launcher button[data-testid*="webchat" i],
-    .hide-cognigy-launcher button[aria-label*="chat" i]{
+    /* If your webchat build injects a floating launcher, we can hide it AFTER we confirm embed worked.
+       We'll toggle this class in JS after init succeeds. */
+    .hide-webchat-launcher .webchat-toggle-button,
+    .hide-webchat-launcher button[data-testid*="webchat" i],
+    .hide-webchat-launcher button[aria-label*="chat" i]{
       opacity:0 !important;
       pointer-events:none !important;
+    }
+
+    /* Debug strip (optional) */
+    .debug{
+      font-size:11px;
+      color: rgba(8,19,31,.55);
+      margin-top:8px;
     }
   </style>
 </head>
@@ -550,20 +586,17 @@
 
           <div class="logoCenter" title="Israel Airways">
             <div class="brandMark" aria-label="Israel Airways">
-              <!-- Simple IA monogram + flight sweep (inline SVG) -->
-              <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-                <defs>
-                  <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/>
-                    <stop offset="1" stop-color="#FFFFFF" stop-opacity=".78"/>
-                  </linearGradient>
-                </defs>
-                <path d="M10 46 C 22 34, 34 30, 54 22" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round" opacity=".95"/>
-                <path d="M46 22 l8 -3 -4 7" fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
-                <path d="M18 50 V18" stroke="url(#g)" stroke-width="6" stroke-linecap="round"/>
-                <path d="M46 50 V18" stroke="url(#g)" stroke-width="6" stroke-linecap="round" opacity=".92"/>
-                <path d="M18 34 H46" stroke="url(#g)" stroke-width="6" stroke-linecap="round" opacity=".92"/>
+              <!-- Inline SVG mark (strokes are pure white so it should always be visible) -->
+              <svg viewBox="0 0 64 64" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 46 C 22 34, 34 30, 54 22" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".95"/>
+                <path d="M46 22 l8 -3 -4 7" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
+                <path d="M18 50 V18" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+                <path d="M46 50 V18" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity=".92"/>
+                <path d="M18 34 H46" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity=".92"/>
               </svg>
+
+              <!-- Fallback if SVG fails for any reason -->
+              <div class="brandFallback" id="brandFallback">IA</div>
             </div>
 
             <div class="brandText">
@@ -654,7 +687,7 @@
         <div class="navItem"><div class="ico">☰</div><div>עוד</div></div>
       </div>
 
-      <!-- Options / Rebooking modal -->
+      <!-- Options modal -->
       <div class="modal" id="projectionModal" aria-hidden="true">
         <div class="sheet">
           <div class="topBar">
@@ -663,18 +696,20 @@
           </div>
 
           <div class="sheetBody">
-            <div class="projGrid">
-              <div class="projCard">
-                <div class="projTitle">תמונת מצב <span class="pill">IA 712</span></div>
-                <div class="projMeta">
+            <div class="projGrid" style="display:grid; gap:12px;">
+              <div class="projCard" style="border:1px solid var(--ia-border); border-radius:18px; padding:12px; background:#fff; box-shadow:0 10px 25px rgba(8,19,31,.06);">
+                <div class="projTitle" style="font-weight:1000; color: rgba(8,19,31,.90); margin-bottom:6px; font-size:13px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                  תמונת מצב <span class="pill">IA 712</span>
+                </div>
+                <div class="projMeta" style="font-size:12px; color: rgba(8,19,31,.58); line-height:1.55;">
                   יש שינוי בלו״ז. כדי לשמור על התכנון שלך, הנה אפשרויות רלוונטיות:
                   שינוי לטיסה מוקדמת/מאוחרת, מסלול עם קונקשן, או שמירה על הטיסה עם עדכון שער בזמן אמת.
                 </div>
               </div>
 
-              <div class="projCard">
-                <div class="projTitle">אפשרויות לדוגמה</div>
-                <div class="projMeta">דוגמאות להמחשה בלבד:</div>
+              <div class="projCard" style="border:1px solid var(--ia-border); border-radius:18px; padding:12px; background:#fff; box-shadow:0 10px 25px rgba(8,19,31,.06);">
+                <div class="projTitle" style="font-weight:1000; color: rgba(8,19,31,.90); margin-bottom:6px; font-size:13px;">אפשרויות לדוגמה</div>
+                <div class="projMeta" style="font-size:12px; color: rgba(8,19,31,.58); line-height:1.55;">דוגמאות להמחשה בלבד:</div>
 
                 <table aria-label="טיסות חלופיות" style="width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:16px; border:1px solid rgba(223,233,246,.95); margin-top:10px; font-size:12px;">
                   <thead>
@@ -708,15 +743,15 @@
                 </div>
               </div>
 
-              <div class="projCard">
-                <div class="projTitle">המלצה מהירה</div>
-                <div class="projMeta">
+              <div class="projCard" style="border:1px solid var(--ia-border); border-radius:18px; padding:12px; background:#fff; box-shadow:0 10px 25px rgba(8,19,31,.06);">
+                <div class="projTitle" style="font-weight:1000; color: rgba(8,19,31,.90); margin-bottom:6px; font-size:13px;">המלצה מהירה</div>
+                <div class="projMeta" style="font-size:12px; color: rgba(8,19,31,.58); line-height:1.55;">
                   • אם חשוב להגיע הכי מוקדם: לבחור <b>מוקדמת היום</b><br>
                   • אם חשוב להימנע משינויים: להישאר עם הטיסה + עדכון שער<br>
                   • רוצים? Israel Airways תעזור בצ׳ק-אין/מושב/כבודה בצ׳אט קצר
                 </div>
                 <div class="btnRow" style="margin-top:12px;">
-                  <button class="btn chat" id="btnProjectionChat">💬 פתח צ׳אט עם נציג/ה</button>
+                  <button class="btn chat" id="btnProjectionChat">💬 פתח צ׳אט</button>
                   <button class="btn ghost" id="btnProjectionClose">סגור</button>
                 </div>
               </div>
@@ -744,9 +779,10 @@
             </div>
 
             <div class="chatMount" aria-label="Israel Airways chat window">
-              <!-- Cognigy Webchat mounts here -->
               <div id="webchatContainer"></div>
             </div>
+
+            <div class="debug" id="debugLine" aria-live="polite"></div>
           </div>
         </div>
       </div>
@@ -754,7 +790,7 @@
     </div>
   </div>
 
-  <!-- Cognigy Webchat -->
+  <!-- Cognigy Webchat (as you provided) -->
   <script src="https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js"></script>
 
   <script>
@@ -767,44 +803,71 @@
     const show = (el) => el.classList.add("show");
     const hide = (el) => el.classList.remove("show");
     const setChatStatus = (t) => { const el = byId("chatStatus"); if (el) el.textContent = t; };
+    const dbg = (t) => { const el = byId("debugLine"); if (el) el.textContent = t || ""; };
 
-    // ========= WEBCHAT INIT (mount into our overlay container) =========
+    // ========= LOGO SAFETY (fallback if SVG doesn't render) =========
+    function ensureLogoVisible(){
+      const svg = document.querySelector(".brandMark svg");
+      const fallback = byId("brandFallback");
+      if (!svg || !fallback) return;
+
+      // If SVG exists but has zero size (rare), show fallback.
+      const r = svg.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2){
+        fallback.style.display = "grid";
+      }
+    }
+
+    // ========= WEBCHAT INIT (embedded) =========
     let webchatInitialized = false;
 
-    function initChat(){
+    function initChatEmbedded(){
       if (webchatInitialized) return true;
 
-      if (typeof window.initWebchat !== "function") {
+      const mount = byId("webchatContainer");
+      if (!mount){
+        setChatStatus("שגיאה");
+        dbg("Missing #webchatContainer");
+        return false;
+      }
+
+      if (typeof window.initWebchat !== "function"){
         setChatStatus("לא זמין");
+        dbg("initWebchat is not defined (webchat.js failed to load).");
         return false;
       }
 
       setChatStatus("טוען…");
+      dbg("Calling initWebchat…");
 
       try{
-        // Mount webchat into our container (supported by Cognigy Webchat)
+        // Many Cognigy Webchat builds accept either `rootElement` or `container`.
+        // We pass both to maximize compatibility.
         window.initWebchat(COGNIGY_WEBCHAT_ENDPOINT, {
-          // Try common mounting options used by Cognigy Webchat builds.
-          // If your build expects different keys, adjust one of these.
-          container: "#webchatContainer",
-          rootElement: document.getElementById("webchatContainer"),
+          open: true,
+          rootElement: mount,
+          container: "#webchatContainer"
 
-          // Optional quality-of-life settings (safe defaults)
-          open: true
+          // NOTE: we intentionally do NOT hide the launcher here until we confirm embed works.
+          // If your build *only* supports launcher mode, hiding it would make the UI look blank.
         });
 
         webchatInitialized = true;
-        document.documentElement.classList.add("hide-cognigy-launcher");
         setChatStatus("מוכן");
+        dbg("initWebchat called. If chat is blank, check DevTools → Console/Network for CORS/403 errors.");
         return true;
       } catch (e){
         setChatStatus("טעינה נכשלה");
+        dbg("initWebchat threw an error. Open DevTools Console for details.");
+        console.error("Webchat init failed:", e);
         return false;
       }
     }
 
     // ========= UI wiring =========
     document.addEventListener("DOMContentLoaded", () => {
+      ensureLogoVisible();
+
       // Projection modal
       byId("btnProjection").addEventListener("click", () => show(byId("projectionModal")));
       byId("btnCloseProjection").addEventListener("click", () => hide(byId("projectionModal")));
@@ -817,7 +880,7 @@
       byId("btnChatNow").addEventListener("click", () => {
         show(byId("chatOverlay"));
         setChatStatus("טוען…");
-        initChat();
+        initChatEmbedded();
       });
 
       // Open chat from projection modal
@@ -825,7 +888,7 @@
         hide(byId("projectionModal"));
         show(byId("chatOverlay"));
         setChatStatus("טוען…");
-        initChat();
+        initChatEmbedded();
       });
 
       // Close chat overlay
@@ -835,8 +898,8 @@
       });
 
       setChatStatus("ממתין");
+      dbg("");
     });
   </script>
 </body>
 </html>
-
