@@ -75,6 +75,20 @@
     .brandText .name{ font-size:14px; }
     .brandText .tag{ font-size:11px; opacity:.9; font-weight:900; }
 
+    .statusBadge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.25);
+      background:rgba(255,255,255,.18);
+      font-weight:900;
+      font-size:12px;
+      color:#fff;
+      white-space:nowrap;
+    }
+
     .content{
       padding:18px;
       flex:1;
@@ -110,18 +124,6 @@
       font-size:12px;
       color:var(--muted);
       line-height:1.35;
-    }
-    .statusBadge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(223,233,246,.95);
-      background:#fff;
-      font-weight:900;
-      font-size:12px;
-      color:rgba(8,19,31,.72);
     }
 
     /* Overlay */
@@ -208,15 +210,13 @@
 
       <div class="content">
         <div class="card">
-          שלום יוגב 👋<br><br>
+          <div style="font-weight:1000; font-size:18px; margin-bottom:8px;">שלום יוגב 👋</div>
           זיהינו שינוי בלו״ז לטיסה IA 712.<br>
           אפשר לדבר עם נציג/ה בצ׳אט.
 
           <button class="btn" id="openChat" disabled>💬 פתח צ׳אט</button>
 
-          <div class="statusLine" id="libStatus">
-            טוען רכיב צ׳אט…
-          </div>
+          <div class="statusLine" id="libStatus">טוען רכיב צ׳אט…</div>
         </div>
       </div>
 
@@ -236,57 +236,26 @@
   </div>
 
   <script>
-    // Endpoint (kept on window to avoid redeclare issues)
+    // Put endpoint on window to avoid redeclare errors
     window.IA_WEBCHAT_ENDPOINT =
       "https://endpoint-trial.cognigy.ai/fa17d61a203862b03445bd139a8c2b3589dbd5e0325f8d84d917ddebbfef0bdc";
-
-    // Try multiple CDNs (some environments block one or cache a bad one)
-    const WEBCHAT_SCRIPT_URLS = [
-      "https://cdn.jsdelivr.net/npm/@cognigy/webchat/dist/webchat.umd.js",
-      "https://unpkg.com/@cognigy/webchat/dist/webchat.umd.js",
-      "https://cdn.jsdelivr.net/npm/@cognigy/webchat@latest/dist/webchat.umd.js"
-    ];
 
     const libStatus = document.getElementById("libStatus");
     const openBtn = document.getElementById("openChat");
 
-    function setStatus(text){
-      libStatus.textContent = text;
-    }
+    function setStatus(t){ libStatus.textContent = t; }
 
-    function loadScript(src){
+    // Load the official Cognigy webchat bundle (per docs)
+    // https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js :contentReference[oaicite:1]{index=1}
+    function loadWebchatBundle(){
       return new Promise((resolve, reject) => {
         const s = document.createElement("script");
-        s.src = src;
+        s.src = "https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js";
         s.async = true;
-        s.onload = () => resolve(src);
-        s.onerror = () => reject(new Error("Failed to load: " + src));
+        s.onload = () => resolve(true);
+        s.onerror = () => reject(new Error("Failed to load webchat.js"));
         document.head.appendChild(s);
       });
-    }
-
-    async function ensureWebchatLoaded(){
-      if (typeof window.initWebchat === "function") return true;
-
-      for (let i = 0; i < WEBCHAT_SCRIPT_URLS.length; i++){
-        const url = WEBCHAT_SCRIPT_URLS[i];
-        try{
-          setStatus(`טוען רכיב צ׳אט… (${i+1}/${WEBCHAT_SCRIPT_URLS.length})`);
-          await loadScript(url);
-
-          if (typeof window.initWebchat === "function"){
-            setStatus("רכיב הצ׳אט נטען ✅");
-            openBtn.disabled = false;
-            return true;
-          }
-        } catch (e){
-          console.warn(e);
-        }
-      }
-
-      setStatus("לא ניתן לטעון את רכיב הצ׳אט. פתח DevTools → Network ובדוק חסימות/404.");
-      openBtn.disabled = true;
-      return false;
     }
 
     let chatInitialized = false;
@@ -297,14 +266,13 @@
       if (chatInitialized) return;
 
       if (typeof window.initWebchat !== "function"){
-        alert("רכיב הצ׳אט לא נטען. בדוק Console/Network.");
+        alert("רכיב הצ׳אט לא נטען. בדוק DevTools → Network האם webchat.js נחסם/404.");
         return;
       }
 
       window.initWebchat(window.IA_WEBCHAT_ENDPOINT, {
         open: true,
         container: "#webchatContainer",
-        rootElement: document.getElementById("webchatContainer"),
         disableDefaultLauncher: true
       });
 
@@ -323,10 +291,25 @@
       }
     });
 
-    // Kick off loading as soon as page is ready
-    document.addEventListener("DOMContentLoaded", () => {
-      ensureWebchatLoaded();
-    });
+    // Boot
+    (async () => {
+      try{
+        setStatus("טוען רכיב צ׳אט…");
+        await loadWebchatBundle();
+
+        if (typeof window.initWebchat === "function"){
+          setStatus("רכיב הצ׳אט נטען ✅");
+          openBtn.disabled = false;
+        } else {
+          setStatus("הרכיב נטען אבל initWebchat לא זמין. בדוק Console.");
+          openBtn.disabled = true;
+        }
+      } catch (e){
+        console.warn(e);
+        setStatus("לא ניתן לטעון את רכיב הצ׳אט. בדוק DevTools → Network לחסימות/404.");
+        openBtn.disabled = true;
+      }
+    })();
   </script>
 </body>
 </html>
