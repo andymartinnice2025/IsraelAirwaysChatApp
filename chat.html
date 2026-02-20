@@ -4,38 +4,103 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Israel Airways Chat</title>
+
   <style>
     html, body { height:100%; margin:0; background:#fff; }
-    /* Prevent scrollbars around the widget */
     body { overflow:hidden; }
 
-    /*
-      Best-effort CSS to remove common header / home sections.
-      Cognigy Webchat DOM varies; the MutationObserver below is the reliable layer.
-    */
-    [class*="header" i],
-    [class*="Header" i]{
-      /* don't blanket-hide everything; rely mostly on observer */
+    /* A simple deterministic fallback UI shown until chat is visible */
+    .boot{
+      position:fixed;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding:18px;
+      background:#fff;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      z-index:9999;
+    }
+    .boot.hidden{ display:none; }
+
+    .bootTitle{
+      font-weight:900;
+      font-size:16px;
+      color:#08131F;
+      text-align:center;
+    }
+    .bootSub{
+      font-weight:700;
+      font-size:12px;
+      color:#6C7A8B;
+      text-align:center;
+      line-height:1.35;
+      max-width:320px;
+    }
+    .bootBtn{
+      border:none;
+      border-radius:16px;
+      padding:12px 14px;
+      font-weight:900;
+      cursor:pointer;
+      background:linear-gradient(180deg,#0E8A5B,#0A6B46);
+      color:#fff;
+      width:min(320px, 92vw);
+      font-size:14px;
+    }
+    .bootBtn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    /* IMPORTANT: We do NOT rely on the launcher bubble. Hide it. */
+    /* These selectors are best-effort (Cognigy versions vary). */
+    .webchat-launcher,
+    [class*="launcher" i],
+    [data-testid*="launcher" i],
+    [aria-label*="launcher" i]{
+      display:none !important;
+      pointer-events:none !important;
+      opacity:0 !important;
     }
   </style>
 </head>
+
 <body>
+  <!-- Deterministic fallback -->
+  <div class="boot" id="boot">
+    <div class="bootTitle">צ׳אט תמיכה • Israel Airways</div>
+    <div class="bootSub">
+      טוען את הצ׳אט… אם הוא לא נפתח אוטומטית, לחץ/י על “התחל/י שיחה”.
+    </div>
+    <button class="bootBtn" id="startBtn" disabled>התחל/י שיחה</button>
+  </div>
+
+  <!-- Hosted script you already use -->
   <script src="https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js"></script>
+
   <script>
     const ENDPOINT =
       "https://endpoint-trial.cognigy.ai/fa17d61a203862b03445bd139a8c2b3589dbd5e0325f8d84d917ddebbfef0bdc";
 
-    // Init webchat
-    initWebchat(ENDPOINT);
+    const boot = document.getElementById("boot");
+    const startBtn = document.getElementById("startBtn");
 
-    // ---- Hide the “home/header” bits so chat dominates ----
+    // Texts you wanted to hide (header/home chrome)
     const TARGET_TEXTS = [
       "Support Chat",
       "Israel Airways Support",
       "צ׳אט עם נציג/ה",
-      "צ׳אט עם נציג",
-      "הצ׳אט נטען בתוך החלון"
+      "צ׳אט עם נציג"
     ];
+
+    function hideEl(el){
+      if (!el || el.nodeType !== 1) return;
+      el.style.display = "none";
+      el.setAttribute("aria-hidden", "true");
+    }
 
     function looksLikeChrome(el){
       if (!el || el.nodeType !== 1) return false;
@@ -44,33 +109,83 @@
       return TARGET_TEXTS.some(x => t.includes(x));
     }
 
-    function hideElement(el){
-      if (!el || el.nodeType !== 1) return;
-      el.style.display = "none";
-      el.setAttribute("aria-hidden", "true");
-    }
-
-    // Try to hide the smallest sensible container (walk up a bit)
     function hideChromeNear(node){
       let el = node;
-      for (let i = 0; i < 6 && el; i++){
-        if (looksLikeChrome(el)) {
-          // If it’s a small label, hide its parent container
-          const parent = el.closest("header, [role='banner'], [class*='header' i], [class*='top' i], [class*='home' i]") || el;
-          hideElement(parent);
+      for (let i = 0; i < 7 && el; i++){
+        if (looksLikeChrome(el)){
+          const parent =
+            el.closest("header, [role='banner'], [class*='header' i], [class*='home' i], [class*='top' i]") || el;
+          hideEl(parent);
           return;
         }
         el = el.parentElement;
       }
     }
 
-    // Observe DOM changes (webchat renders async)
+    // Try to detect when the conversation UI exists so we can hide the boot screen
+    function conversationIsVisible(){
+      // Best-effort across versions:
+      // - an input/textarea typically exists once chat is open
+      // - message list container may exist
+      const input =
+        document.querySelector("textarea") ||
+        document.querySelector("input[type='text']") ||
+        document.querySelector("[contenteditable='true']");
+      if (input && input.offsetHeight > 0 && input.offsetWidth > 0) return true;
+
+      const msgArea =
+        document.querySelector("[class*='messages' i]") ||
+        document.querySelector("[class*='chat' i][class*='content' i]");
+      if (msgArea && msgArea.offsetHeight > 0) return true;
+
+      return false;
+    }
+
+    // Click common “start conversation” buttons if present
+    function clickStartConversation(){
+      const candidates = Array.from(document.querySelectorAll("button, a"));
+      const labels = ["Start conversation", "התחל שיחה", "התחל/י שיחה", "Start", "התחל"];
+
+      for (const el of candidates){
+        const txt = (el.innerText || "").trim();
+        if (!txt) continue;
+        if (labels.some(l => txt.toLowerCase().includes(l.toLowerCase()))){
+          el.click();
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Main init
+    try{
+      initWebchat(ENDPOINT);
+    } catch (e){
+      console.error("initWebchat failed", e);
+    }
+
+    // Enable the deterministic button soon (even if chat hasn’t rendered yet)
+    startBtn.disabled = false;
+    startBtn.addEventListener("click", () => {
+      // Try multiple times because the DOM may still be rendering
+      let tries = 0;
+      const timer = setInterval(() => {
+        tries++;
+        clickStartConversation();
+        if (conversationIsVisible() || tries > 20) {
+          clearInterval(timer);
+          if (conversationIsVisible()) boot.classList.add("hidden");
+        }
+      }, 250);
+    });
+
+    // Observe DOM mutations: hide chrome + auto-open conversation + hide boot once ready
     const obs = new MutationObserver((mutations) => {
       for (const m of mutations){
         for (const n of m.addedNodes){
           if (n.nodeType !== 1) continue;
           hideChromeNear(n);
-          // Also scan children quickly
+          // also scan children quickly
           const walker = document.createTreeWalker(n, NodeFilter.SHOW_ELEMENT);
           let cur = walker.currentNode;
           while (cur){
@@ -79,18 +194,33 @@
           }
         }
       }
+
+      // As soon as the conversation UI is visible, remove boot overlay
+      if (conversationIsVisible()) {
+        boot.classList.add("hidden");
+      } else {
+        // If not visible yet, keep trying to click "Start conversation"
+        clickStartConversation();
+      }
     });
 
     obs.observe(document.documentElement, { childList:true, subtree:true });
 
-    // Initial pass after short delay
-    setTimeout(() => {
-      // Look for any elements containing those texts and hide their containers
-      const all = Array.from(document.querySelectorAll("body *"));
-      for (const el of all) {
-        if (looksLikeChrome(el)) hideChromeNear(el);
-      }
-    }, 600);
+    // A couple of timed attempts (covers slow loads)
+    const timedAttempts = [300, 800, 1400, 2200, 3200];
+    for (const ms of timedAttempts){
+      setTimeout(() => {
+        // Hide chrome
+        const all = Array.from(document.querySelectorAll("body *"));
+        for (const el of all){
+          if (looksLikeChrome(el)) hideChromeNear(el);
+        }
+        // Try to open convo
+        clickStartConversation();
+        // Hide boot if ready
+        if (conversationIsVisible()) boot.classList.add("hidden");
+      }, ms);
+    }
   </script>
 </body>
 </html>
