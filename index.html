@@ -21,6 +21,9 @@
       --shadow:0 16px 40px rgba(8,19,31,.12);
       --shadow-soft:0 10px 25px rgba(8,19,31,.10);
       --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+
+      /* ✅ NEW: set this to your logo image URL */
+      --brand-logo-url: url("https://andymnicebucket.s3.eu-north-1.amazonaws.com/515b8667-362f-4f82-819a-a28083bbe9bc.png");
     }
 
     *{ box-sizing:border-box; }
@@ -99,7 +102,18 @@
       overflow:hidden;
       flex:0 0 auto;
     }
-    .brandMark svg{ width:34px;height:34px; display:block; }
+
+    /* ✅ NEW: image logo layer */
+    .brandLogoImg{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:contain;      /* change to 'cover' if you prefer */
+      padding:6px;            /* gives breathing room inside the mark */
+    }
+
+    /* ✅ Optional: hide fallback SVG when an image is set */
+    .brandMark.has-image svg{ display:none; }
 
     .brandText{
       display:flex;
@@ -422,7 +436,6 @@
       overflow:hidden;
     }
 
-    /* Projection sheet */
     .topBar{
       padding:14px;
       border-bottom:1px solid var(--ia-border);
@@ -472,7 +485,6 @@
       white-space:nowrap;
     }
 
-    /* CHAT overlay: make chat the majority of screen */
     .chatSheet{
       position:absolute;
       left:12px; right:12px;
@@ -505,11 +517,10 @@
       background:#fff;
     }
 
-    /* Floating close button (no header bar) */
     .chatCloseFab{
       position:absolute;
       top:12px;
-      left:12px; /* RTL: left corner looks like your screenshot */
+      left:12px;
       width:44px;height:44px;
       border-radius:16px;
       border:1px solid rgba(223,233,246,.95);
@@ -533,8 +544,13 @@
           <div class="time">11:07</div>
 
           <div class="logoCenter" title="Israel Airways">
+            <!-- ✅ UPDATED: logo can be an image URL -->
             <div class="brandMark" aria-label="Israel Airways">
-              <svg viewBox="0 0 64 64" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <!-- Image (set the URL via --brand-logo-url or data-logo-url below) -->
+              <img id="brandLogoImg" class="brandLogoImg" alt="Israel Airways Logo" />
+
+              <!-- Fallback SVG (shown only if image fails / no URL provided) -->
+              <svg id="brandLogoFallback" viewBox="0 0 64 64" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10 46 C 22 34, 34 30, 54 22" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".95"/>
                 <path d="M46 22 l8 -3 -4 7" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
                 <path d="M18 50 V18" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
@@ -542,6 +558,7 @@
                 <path d="M18 34 H46" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity=".92"/>
               </svg>
             </div>
+
             <div class="brandText">
               <div class="name">Israel Airways</div>
               <div class="tag">My Flight • הטיסה שלי</div>
@@ -702,7 +719,7 @@
         </div>
       </div>
 
-      <!-- Chat overlay: FULL SCREEN CHAT -->
+      <!-- Chat overlay -->
       <div class="overlay" id="chatOverlay" aria-hidden="true">
         <div class="chatSheet" aria-label="Israel Airways chat window">
           <button class="chatCloseFab" id="btnCloseChat" aria-label="Close chat">✕</button>
@@ -720,13 +737,53 @@
     const show = (el) => el.classList.add("show");
     const hide = (el) => el.classList.remove("show");
 
+    /*
+      ✅ SET YOUR LOGO URL HERE
+      Option A: set it directly in JS (recommended):
+        const BRAND_LOGO_URL = "https://example.com/your-logo.png";
+
+      Option B: set CSS variable --brand-logo-url in :root (already there).
+    */
+    const BRAND_LOGO_URL = "https://via.placeholder.com/128x128.png?text=IA";
+
+    function applyBrandLogo(url){
+      const img = byId("brandLogoImg");
+      const svg = byId("brandLogoFallback");
+      const mark = img?.closest(".brandMark");
+
+      // If no URL, show SVG fallback
+      if(!url){
+        if(img) img.style.display = "none";
+        if(svg) svg.style.display = "block";
+        if(mark) mark.classList.remove("has-image");
+        return;
+      }
+
+      img.style.display = "block";
+      img.src = url;
+
+      img.onload = () => {
+        if(svg) svg.style.display = "none";
+        if(mark) mark.classList.add("has-image");
+      };
+
+      img.onerror = () => {
+        // fallback to SVG if the URL fails
+        img.style.display = "none";
+        if(svg) svg.style.display = "block";
+        if(mark) mark.classList.remove("has-image");
+      };
+    }
+
     function openChat(){
       show(byId("chatOverlay"));
-      // If you want a fresh chat each time:
       // byId("chatFrame").src = "chat.html?ts=" + Date.now();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      // Apply logo
+      applyBrandLogo(BRAND_LOGO_URL);
+
       // Projection modal
       byId("btnProjection").addEventListener("click", () => show(byId("projectionModal")));
       byId("btnCloseProjection").addEventListener("click", () => hide(byId("projectionModal")));
