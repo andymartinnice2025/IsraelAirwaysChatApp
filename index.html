@@ -91,25 +91,27 @@
     }
 
     .brandMark{
-      width:44px;height:44px;
-      border-radius:14px;
-      background: rgba(255,255,255,.18);
-      border:1px solid rgba(255,255,255,.28);
-      display:grid;
-      place-items:center;
-      backdrop-filter: blur(8px);
-      box-shadow:0 10px 25px rgba(0,0,0,.12);
-      overflow:hidden;
+      width:64px;
+      height:64px;
+      border-radius:0;          /* no rounded square */
+      background: transparent;  /* remove frosted background */
+      border: none;             /* remove border */
+      box-shadow: none;         /* remove shadow */
+      backdrop-filter: none;    /* remove blur */
+      overflow: visible;        /* no clipping */
+      display:flex;
+      align-items:center;
+      justify-content:center;
       flex:0 0 auto;
     }
 
     /* ✅ NEW: image logo layer */
     .brandLogoImg{
-      width:100%;
-      height:100%;
+      width:64px;
+      height:64px;
       display:block;
-      object-fit:contain;      /* change to 'cover' if you prefer */
-      padding:6px;            /* gives breathing room inside the mark */
+      object-fit:contain;
+      padding:0; /* remove inner padding so it can be larger */
     }
 
     /* ✅ Optional: hide fallback SVG when an image is set */
